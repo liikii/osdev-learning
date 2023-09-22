@@ -14,6 +14,7 @@ uint32_t bitmap_size;
 void pmm_init(uint32_t mem_size) {
     total_blocks = mem_size / BLOCK_SIZE;
     // For the given memory size, how many bytes is needed for the bitmap? (mem_size nees to be multiple of BLOCK_SIZE = 4096)
+    // #define BLOCKS_PER_BUCKET 8
     bitmap_size = total_blocks / BLOCKS_PER_BUCKET;
     if(bitmap_size * BLOCKS_PER_BUCKET < total_blocks)
         bitmap_size++;

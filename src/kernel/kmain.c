@@ -127,6 +127,7 @@ void completed_init() {
     tss_init(5, 0x10, 0);
 
     qemu_printf("Initializing physical memory manager...\n");
+    // 
     // bitmap init
     pmm_init(1096 * M);
 

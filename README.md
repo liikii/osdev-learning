@@ -1,6 +1,11 @@
 ## os-dev learning
 code clone from https://github.com/szhou42/osdev
+
+
 ---
+
+这个项目github.com/szhou42/osdev 里，
+
 
 # edu OS
 An operating system based on <a href = "http://www.osdever.net/bkerndev/Docs/title.htm"> Brans' Kernel Development Tutorial</a>  
