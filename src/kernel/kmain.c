@@ -114,6 +114,16 @@ void completed_init() {
 
     // init idt
     idt_init();
+
+    // tss 
+    // Segment Selector
+    // Segment Selector
+    // 15    3 2   1   0
+    // Index   TI  RPL
+    // Index: Bits 3-15 of the Index of the GDT or LDT entry referenced by the selector. Since Segment Descriptors are 8 bytes in length, the value of Index is never unaligned and contains all zeros in the lowest 3 bits.
+    // TI: Specifies which descriptor table to use. If clear (0) then the GDT is used, if set (1) then the current LDT is used.
+    // RPL: The requested Privilege Level of the selector, determines if the selector is valid during permission checks and may set execution or memory access privilege.
+    // , the low three bits are zero
     tss_init(5, 0x10, 0);
 
     qemu_printf("Initializing physical memory manager...\n");
