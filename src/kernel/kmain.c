@@ -141,6 +141,10 @@ void completed_init() {
     // max参数表示堆内存的最大地址，即堆可以扩展的最大位置。
 
     // 通过这些参数的设置，kheap_init函数将为堆内存管理器设置初始值，以确保堆管理器可以正确地分配和释放内存。这样，操作系统就能够使用堆内存来动态分配和管理内存，以满足程序的运行需求。
+    // #define KHEAP_START         (void*)0xC0400000
+    // #define KHEAP_INITIAL_SIZE  48 * M
+    // #define KHEAP_MAX_ADDRESS   (void*)0xCFFFFFFF
+    // #define HEAP_MIN_SIZE       4 * M
     qemu_printf("Initializing kernel heap...\n");
     kheap_init(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDRESS);
 

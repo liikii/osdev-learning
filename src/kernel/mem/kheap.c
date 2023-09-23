@@ -274,7 +274,7 @@ void addNodeToFreelist(struct Block * x) {
 
 /*
  * Find the bestfit block in the memory pool
- *
+ * 找最小适合
  * */
 struct Block * bestfit(uint32_t size) {
     // extend this, may be, optimize for certain size of type
@@ -317,12 +317,30 @@ struct Block * getNextBlock(struct Block * n) {
 
 /*
  * The real malloc function
- *
+ * reference: http://www.jamesmolloy.co.uk/tutorial_html/7.-The%20Heap.html
+ * 
+ 7.2.1. Allocation
+Allocation is straightforward, if a little long-winded. Most of the steps are error-checking and creating new holes to minimise memory leaks.
+
+Search the index table to find the smallest hole that will fit the requested size. As the table is ordered, this just entails iterating through until we find a hole which will fit.
+If we didn't find a hole large enough, then:
+Expand the heap.
+If the index table is empty (no holes have been recorded) then add a new entry to it.
+Else, adjust the last header's size member and rewrite the footer.
+To ease the number of control-flow statements, we can just recurse and call the allocation function again, trusting that this time there will be a hole large enough.
+Decide if the hole should be split into two parts. This will normally be the case - we usually will want much less space than is available in the hole. The only time this will not happen is if there is less free space after allocating the block than the header/footer takes up. In this case we can just increase the block size and reclaim it all afterwards.
+If the block should be page-aligned, we must alter the block starting address so that it is and create a new hole in the new unused area.
+If it is not, we can just delete the hole from the index.
+Write the new block's header and footer.
+If the hole was to be split into two parts, do it now and write a new hole into the index.
+Return the address of the block + sizeof(header_t) to the user.
  * */
 void *malloc(uint32_t size) {
     if(size == 0) return NULL;
     // calculate real size that's used, round it to multiple of 16
+    // 为了减少碎片， 尽量是16的倍数给用户。
     uint32_t roundedSize = ((size + 15)/16) * 16;                                  /// think twice how you round
+    // 
     uint32_t blockSize = roundedSize + OVERHEAD;
     // find bestfit in avl tree, note: this bestfit function will remove the best-fit node when there is more than one such node in tree.
     struct Block * best;
