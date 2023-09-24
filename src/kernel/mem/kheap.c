@@ -6,6 +6,11 @@
 #include <system.h>
 #include <math.h>
 
+// // kheap.h -- Interface for kernel heap functions, also provides
+//            a placement malloc() for use before the heap is
+//            initialised.
+//            Based on code from JamesM's kernel development tutorials.
+// http://www.jamesmolloy.co.uk/
 // Global Var
 
 struct Block * head = NULL;       // First memory block
@@ -276,6 +281,7 @@ void addNodeToFreelist(struct Block * x) {
  * Find the bestfit block in the memory pool
  * 找最小适合
  * */
+// // struct Block: size|prev|next;
 struct Block * bestfit(uint32_t size) {
     // extend this, may be, optimize for certain size of type
     if(!freelist) return NULL;
@@ -334,13 +340,41 @@ If it is not, we can just delete the hole from the index.
 Write the new block's header and footer.
 If the hole was to be split into two parts, do it now and write a new hole into the index.
 Return the address of the block + sizeof(header_t) to the user.
+
+Bad assumption. NEVER assume anything with malloc() apart from what is explicitly in the man page.
+
+First, the space is rounded up to your system's idea of the hardest thing to align. Your system seems to give 16 bytes minimum. I would guess this is 8 bytes for the internal header and 8 bytes for a double.
+
+The reason this happens: suppose you malloc space for an array of 10 structs. The compiler needs to generate code to access the members the same in each item. So they need to be padded to a standard size. The worst case is where a double might be in the struct - it needs 8-byte alignment on some systems. Most mallocs just assume 8 or 16 byte alignment, some figure it out from machine.h or similar.
+
+Second, the sequence of mallocs can depend on all kinds of stuff. It all looks simple when you do the first few. But when space has been freed, malloc can go back and re-use it, or keep giving you fresh space, or anything else it likes. Maybe you did some debug with fptintf (stderr...). Well, stdio allocates buffers the first time you access the stream, so that was maybe 2048 bytes being allocated just when you didn't expect it.
+
+
+The basic job of malloc and friends is to manage the fact that the OS can generally only (efficiently) deal with large allocations (whole pages and extents of pages), while programs often need smaller chunks and finer-grained management.
+
+So what malloc (generally) does, is that the first time it is called, it allocates a larger amount of memory from the system (via mmap or sbrk -- maybe one page or maybe many pages), and uses a small amount of that for some data structures to track the heap use (where the heap is, what parts are in use and what parts are free) and then marks the rest of that space as free. It then allocates the memory you requested from that free space and keeps the rest available for subsequent malloc calls.
+
+So the first time you call malloc for eg 16 bytes, it will uses mmap or sbrk to allocate a large chunk (maybe 4K or maybe 64K or maybe 16MB or even more) and initialize that as mostly free and return you a pointer to 16 bytes somewhere. A second call to malloc for another 16 bytes will just return you another 16 bytes from that pool -- no need to go back to the OS for more.
+
+As your program goes ahead mallocing more memory it will just come from this pool, and free calls will return memory to the free pool. If it generally allocates more than it frees, eventually that free pool will run out, and at that point, malloc will call the system (mmap or sbrk) to get more memory to add to the free pool.
+
+This is why if you monitor a process that is allocating and freeing memory with malloc/free with some sort of process monitor, you will generally just see the memory use go up (as the free pool runs out and more memory is requested from the system), and generally will not see it go down -- even though memory is being freed, it generally just goes back to the free pool and is not unmapped or returned to the system. There are some exceptions -- particularly if very large blocks are involved -- but generally you can't rely on any memory being returned to the system until the process exits.
  * */
 void *malloc(uint32_t size) {
     if(size == 0) return NULL;
+    // round up requested size to a multiple of ALIGNMENT 
     // calculate real size that's used, round it to multiple of 16
-    // 为了减少碎片， 尽量是16的倍数给用户。
+    // 为了对齐 是16的倍数给用户。
+    // The MALLOCALIGN environment variable can be set to the default alignment desired for every malloc() allocation. An example is
+    // MALLOCALIGN=16;  export MALLOCALIGN
+
+    // The MALLOCALIGN environment variable can be set to any power of 2 value greater than or equal to the size of a pointer in the corresponding run mode (4 bytes for 32-bit mode, 8 bytes for 64-bit mode). For 32-bit vector-enabled programs, this environment variable can be set to 16, so all malloc()s will be suitably aligned for vector data types if necessary. Note that 64-bit vector programs will already receive 16-byte-aligned allocations.
+    // Understanding the default allocation policy
     uint32_t roundedSize = ((size + 15)/16) * 16;                                  /// think twice how you round
-    // 
+    // OVERHEAD (sizeof(struct Block) + sizeof(unsigned int))
+    // why add sizeof(unsigned int)?
+    //  malloc overhead refers to the size of an internal malloc construct that is required for each block in the bucket. This internal construct is 8 bytes long for 32-bit applications and 16 bytes long for 64-bit applications. It is not part of the allocatable space available to the user, but is part of the total size of each bucket.
+    // Allocated memory contains an 8- or 16-byte overhead for the size of the chunk and usage flags (similar to a dope vector). Unallocated chunks also store pointers to other free chunks in the usable space area, making the minimum chunk size 16 bytes on 32-bit systems and 24/32 (depends on alignment) bytes on 64-bit systems.
     uint32_t blockSize = roundedSize + OVERHEAD;
     // find bestfit in avl tree, note: this bestfit function will remove the best-fit node when there is more than one such node in tree.
     struct Block * best;
@@ -349,10 +383,15 @@ void *malloc(uint32_t size) {
     uint32_t * trailingSize = NULL;
     if(best) {
         // and! put a SIZE to the last four byte of the chunk
+        // and! put a SIZE to the last four byte of the chunk
         void * ptr = (void*)best;
+        // next block address
         void * saveNextBlock = getNextBlock(best);
+        // 给的块大小
         uint32_t chunkSize = getRealSize(best->size) + OVERHEAD;
+        // 多出来的量
         uint32_t rest = chunkSize - blockSize; // what's left
+        
         uint32_t whichSize;
         // avoid integer underflow, equivalent to if(rest - OVERHEAD < 8)
         if(rest < 8 + OVERHEAD) whichSize = chunkSize;
@@ -415,6 +454,20 @@ noSplit:
         return base + sizeof(struct Block);
     }
     else {
+        // ------------------------------------
+        // int brk(void *addr);
+        // void *sbrk(intptr_t increment);
+        // ------------------------------------
+
+        // 
+        //    The brk() and sbrk() functions are used to change the amount of space allocated for the calling process. The change is made by resetting the process' break value and allocating the appropriate amount of space. The amount of allocated space increases as the break value increases. The newly-allocated space is set to 0. However, if the application first decrements and then increments the break value, the contents of the reallocated space are unspecified.
+        // The brk() function sets the break value to addr and changes the allocated space accordingly.
+        // The sbrk() function adds incr bytes to the break value and changes the allocated space accordingly. If incr is negative, the amount of allocated space is decreased by incr bytes. The current value of the program break is returned by sbrk(0).
+        // The behaviour of brk() and sbrk() is unspecified if an application also uses any other memory functions (such as malloc(), mmap(), free()). Other functions may use these other memory functions silently.
+        // It is unspecified whether the pointer returned by sbrk() is aligned suitably for any purpose.
+        // These interfaces need not be reentrant.
+        // ==============================
+
         // :( no blocks fit my need!  use sbrk, initialize some meta data and return it!
         // wait! I can still optimize! if the tail block is freed, then I can sbrk less
         /*
@@ -500,10 +553,12 @@ void free(void *ptr) {
 void *realloc(void *ptr, uint32_t size) {
     uint32_t * trailingSize = NULL;
     if(!ptr) return malloc(size);
+    // size is 0, release the space. 
     if(size == 0 && ptr != NULL) {
         free(ptr);
         return NULL;
     }
+
     uint32_t roundedSize = ((size + 15)/16) * 16;                                  /// think twice how you round
     uint32_t blockSize = roundedSize + OVERHEAD;
     struct Block * nextBlock, * prevBlock;

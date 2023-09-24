@@ -230,6 +230,8 @@ void enable_paging() {
     paging_enabled = 1;
 }
 
+
+// set heap break point.
 void * ksbrk(int size) {
     void * runner = NULL;
     void * new_boundary;
