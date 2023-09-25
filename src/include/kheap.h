@@ -36,10 +36,20 @@
 #define KHEAP_MAX_ADDRESS   (void*)0xCFFFFFFF
 #define HEAP_MIN_SIZE       4 * M
 
+
 #define PAGE_SIZE 4096
+// // and! put a SIZE to the last four byte of the chunk
+// // and! put a SIZE to the last four byte of the chunk
+// 为什么  存一个 size 到块的最后4个字节那
 #define OVERHEAD (sizeof(struct Block) + sizeof(unsigned int))
 
 
+// struct Block: size|prev|next;
+// {
+//     unsigned int size;
+//     struct Block * prev;
+//     struct Block * next;
+// }
 struct Block
 {
     unsigned int size;
