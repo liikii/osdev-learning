@@ -170,6 +170,7 @@ void kheap_init(void * start, void * end, void * max) {
 
 /*
    Given the field size in a Block(which contain free/alloc information), extract the size.
+这个函数的作用可能是为了确保字段的大小始终为偶数值，可能与内存管理或数据结构的实现有关。
    */
 uint32_t getRealSize(uint32_t size) {
     return (size >> 1) << 1;
@@ -384,6 +385,7 @@ void *malloc(uint32_t size) {
     if(best) {
         // and! put a SIZE to the last four byte of the chunk
         // and! put a SIZE to the last four byte of the chunk
+        // and! put a SIZE to the last four byte of the chunk
         void * ptr = (void*)best;
         // next block address
         void * saveNextBlock = getNextBlock(best);
@@ -399,7 +401,10 @@ void *malloc(uint32_t size) {
         best->size = whichSize - OVERHEAD;
         setFree(&(best->size), 0);
         void * base = ptr;
+        // 把size给写到::最后
+        // 写大小的位置
         trailingSize = ptr + whichSize - sizeof(uint32_t);
+        // 写值 
         *trailingSize = best->size;
         ptr = (void*)(trailingSize + 1);
 
@@ -483,6 +488,7 @@ noSplit:
          *trailingSize = tail->size;
          return tail + 1;
          }*/
+        // 新开辟空间
         uint32_t realsize = blockSize;
         struct Block * ret = ksbrk(realsize);
         ASSERT(ret != NULL &&  "Heap is running out of space\n");
