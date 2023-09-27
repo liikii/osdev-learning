@@ -231,6 +231,31 @@ void enable_paging() {
 }
 
 
+// I think that code is self-explanatory. A few assertions are made, and the new_size parameter is changed so that it falls on a page boundary. Frames are then allocated one-by-one according to the parameters given when creating the heap (supervisor mode enabled?, read only access?).
+
+// static u32int contract(u32int new_size, heap_t *heap)
+// {
+//    // Sanity check.
+//    ASSERT(new_size < heap->end_address-heap->start_address);
+//    // Get the nearest following page boundary.
+//    if (new_size&0x1000)
+//    {
+//        new_size &= 0x1000;
+//        new_size += 0x1000;
+//    }
+//    // Don't contract too far!
+//    if (new_size < HEAP_MIN_SIZE)
+//        new_size = HEAP_MIN_SIZE;
+//    u32int old_size = heap->end_address-heap->start_address;
+//    u32int i = old_size - 0x1000;
+//    while (new_size < i)
+//    {
+//        free_frame(get_page(heap->start_address+i, 0, kernel_directory));
+//        i -= 0x1000;
+//    }
+//    heap->end_address = heap->start_address + new_size;
+//    return new_size;
+// }
 // set heap break point.
 void * ksbrk(int size) {
     void * runner = NULL;

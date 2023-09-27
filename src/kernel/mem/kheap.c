@@ -579,8 +579,9 @@ void free(void *ptr) {
 /*
  * The real realloc function
  *
- * */
 
+* 
+*/
 void *realloc(void *ptr, uint32_t size) {
     uint32_t * trailingSize = NULL;
     if(!ptr) return malloc(size);
@@ -590,6 +591,7 @@ void *realloc(void *ptr, uint32_t size) {
         return NULL;
     }
 
+    // think twice how you round
     uint32_t roundedSize = ((size + 15)/16) * 16;                                  /// think twice how you round
     uint32_t blockSize = roundedSize + OVERHEAD;
     struct Block * nextBlock, * prevBlock;
