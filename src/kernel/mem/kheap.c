@@ -227,9 +227,29 @@ int doesItFit(struct Block * n, uint32_t size) {
     return n->size >= getRealSize(size) && isFree(n);
 }
 
+
+/*
+https://pages.cs.wisc.edu/~fischer/cs536.s06/course.hold/html/NOTES/12.HEAP-MANAGEMENT.html
+hniques for coalescing
+There are also several possible ways to solve the second problem (how to coalesce freed storage). One approach is to use a doubly linked list (i.e., each list item has a "previous" as well as a "next" pointer). Also, one bit of the "size" field is reserved to indicate whether the chunk is "free" or "in-use". Now when a chunk is freed, we can check the "free-bit" of the storage that immediately follows the freed chunk (using the freed chunk's "size" bit to locate the "size" field of the following chunk of storage). If that following storage is free, then the two chunks can be coalesced. For example, suppose the situation is like this:
+
+           +------------------------------------+   +--------+
+           |                                    |   |        |
+           v                                    |   |        v
++---+    +-----------------+ +---------+ +------|---|----+ +--------------+
+|   |    |   |   |   |     | |    |    | |    | | | | |  | |   |   |   |  |   
+| o---+  |   | \ | o |     | | 10 |    | | 20 | o | o |  | |   | o | \ |  |
+|   | |  |   |   | | |     | |    |    | |    |   |   |  | |   | | |   |  |
++---+ |  +---------|-------+ +---------+ +---------------+ +-----|--------+
+first |  size prev next       size       size prev next    size prev next
+free  |    ^       |                      ^ ^                    |
+      |    |       |                      | |                    |
+      +----+       +----------------------+ +--------------------+
+*/
+
 /*
  * Set the free/alloc bit of the size field
- *
+ * free, alloc bit in size. 
  * */
 void setFree(uint32_t *size, int x) {
     if(x) {
@@ -456,6 +476,7 @@ void *malloc(uint32_t size) {
 noSplit:
         // return it!
         removeNodeFromFreelist(base);
+        // 有效空间开始地址  
         return base + sizeof(struct Block);
     }
     else {
@@ -490,6 +511,7 @@ noSplit:
          }*/
         // 新开辟空间
         uint32_t realsize = blockSize;
+        // reallocate heap memory.
         struct Block * ret = ksbrk(realsize);
         ASSERT(ret != NULL &&  "Heap is running out of space\n");
         if(!head) head = ret;
@@ -513,12 +535,15 @@ noSplit:
  *
  * */
 void free(void *ptr) {
+    // front previous, current, behind
     struct Block * curr = ptr - sizeof(struct Block);
     struct Block * prev = getPrevBlock(curr);
     struct Block * next = getNextBlock(curr);
+
     if(isFree(prev) && isFree(next)) {
         prev->size = getRealSize(prev->size) + 2*OVERHEAD + getRealSize(curr->size) + getRealSize(next->size);
         setFree(&(prev->size), 1);
+        // 最后设置下一个大小
         uint32_t * trailingSize = (void*)prev + sizeof(struct Block) + getRealSize(prev->size);
         *trailingSize = prev->size;
         // if next used to be tail, set prev = tail
