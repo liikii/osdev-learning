@@ -3,6 +3,8 @@
 #include <system.h>
 #include <kheap.h>
 
+
+// link list implementation.
 typedef struct listnode {
 	struct listnode * prev;
 	struct listnode * next;

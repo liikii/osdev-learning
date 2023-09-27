@@ -2,8 +2,14 @@
 #define VFS_H
 #include <generic_tree.h>
 #include <list.h>
+// Linux journaling是一种文件系统的技术，用于提供更强大的数据完整性和恢复能力。它主要用于防止文件系统崩溃或意外断电时数据的损坏。
 
+// Journaling是通过在文件系统的日志（journal）中记录所有对文件系统所做的更改来实现的。这个日志记录了操作系统对文件系统进行的写入操作，包括创建、修改和删除文件以及更新目录结构等。每当执行一个写入操作时，相应的变化会首先被写入到日志中，然后再被应用到实际的文件系统结构中。
 
+// 如果发生系统崩溃或其他故障，文件系统可以使用日志来恢复到最近一次一致状态。通过读取日志并重新应用之前未完成的操作，文件系统可以确保数据的一致性和完整性。
+
+// 常见的Linux文件系统，如ext4、XFS和JFS，都支持journaling技术。这些文件系统利用日志记录机制来提供更可靠的数据保护，并减少了数据丢失的风险。无论在服务器环境还是个人计算机上，使用journaling文件系统都能提供更高的数据安全性和稳定性。
+// https://read.seas.harvard.edu/cs161/2022/schedule/
 #define PATH_SEPARATOR '/'
 #define PATH_SEPARATOR_STRING "/"
 #define PATH_UP  ".."

@@ -148,9 +148,11 @@ void completed_init() {
     qemu_printf("Initializing kernel heap...\n");
     kheap_init(KHEAP_START, KHEAP_START + KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDRESS);
 
+    // 时钟唤醒
     qemu_printf("Initializing timer...\n");
     timer_init();
 
+    // 
     qemu_printf("Initializing pci...\n");
     pci_init();
 
