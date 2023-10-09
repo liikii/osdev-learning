@@ -70,9 +70,10 @@ void keyboard_handler(register_t * r)
         }
     }
 }
+
+
+// 注册键盘中断
 void keyboard_init() {
     register_interrupt_handler(IRQ_BASE + 1, keyboard_handler);
 }
-
-
 

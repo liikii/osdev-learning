@@ -152,10 +152,11 @@ void completed_init() {
     qemu_printf("Initializing timer...\n");
     timer_init();
 
-    // 
+    // pci初始化，主要设置pci config space 各域大小
     qemu_printf("Initializing pci...\n");
     pci_init();
 
+    // 
     qemu_printf("Initializing keyboard...\n");
     keyboard_init();
 
