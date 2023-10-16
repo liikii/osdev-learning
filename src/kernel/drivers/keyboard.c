@@ -43,6 +43,7 @@ char kbdus[128] = {
     0,  /* All other keys are undefined */
 };
 
+
 void keyboard_handler(register_t * r)
 {
     winmsg_t msg;
@@ -66,6 +67,7 @@ void keyboard_handler(register_t * r)
             // Send message to the focus window
             msg.key_pressed = kbdus[scancode];
             msg.window = get_focus_window();
+            // not handle key board event.
             window_message_handler(&msg);
         }
     }
