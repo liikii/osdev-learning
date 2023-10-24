@@ -19,6 +19,7 @@ uint32_t vfs_get_file_size(vfs_node_t * node) {
  * This function is for debug,purpose
  * Given a dir name, it will print out all the sub-directories/files under the dir
  * */
+// for 
 void vfs_db_listdir(char * name) {
     // Open the VFS node, call its list dir function
     vfs_node_t * n = file_open(name, 0);
@@ -82,6 +83,7 @@ void print_vfstree() {
 
 /*
  * Wrapper for physical filesystem read
+ * call node's read
  * */
 
 unsigned int vfs_read(vfs_node_t *node, unsigned int offset, unsigned int size, char *buffer) {
@@ -94,6 +96,7 @@ unsigned int vfs_read(vfs_node_t *node, unsigned int offset, unsigned int size, 
 
 /*
  * Wrapper for physical filesystem write
+ * call node's write
  * */
 unsigned int vfs_write(vfs_node_t *node, unsigned int offset, unsigned int size, char *buffer) {
     if (node && node->write) {
@@ -106,6 +109,7 @@ unsigned int vfs_write(vfs_node_t *node, unsigned int offset, unsigned int size,
 
 /*
  * Wrapper for physical filesystem open
+ * 
  * */
 void vfs_open(struct vfs_node *node, unsigned int flags) {
     if(!node) return;
@@ -263,7 +267,8 @@ void vfs_unlink(char * name) {
     kfree(save_dirname);
     vfs_close(parent_node);
 }
-
+     // up some wrappers
+// ----
 
 /*
  * Parse the path and replace special meaning dir name such as "." and ".."
