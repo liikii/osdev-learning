@@ -156,7 +156,7 @@ void completed_init() {
     qemu_printf("Initializing pci...\n");
     pci_init();
 
-    // 
+    // 注册keyboard 事件
     qemu_printf("Initializing keyboard...\n");
     keyboard_init();
 

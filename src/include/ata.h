@@ -6,11 +6,33 @@
 
 extern page_directory_t * kpage_dir;
 
+
+/*
+prdt_t 结构体：
+
+buffer_phys：一个32位的物理地址，可能代表缓冲区的物理地址。
+transfer_size：一个16位的传输大小，表示要传输的数据量。
+mark_end：一个16位的标记，可能用于标记传输结束或用作其他用途。
+
+
+ata_dev_t 结构体：
+
+data、error、sector_count、sector_num、cylinder_low、cylinder_high、drive、command、status、control：这些都是16位的寄存器，用于存储IDE设备的信息和状态。其中，某些寄存器（例如 sector_num）在IDE设备中通常用于存储扇区号。
+lba_lo、lba_mid、lba_high：这些是低、中、高3个16位的块地址寄存器，它们一起可以用于存储逻辑块地址（LBA）。
+slave：一个整数字段，可能用于标记设备是主设备还是从设备。
+bar4：一个32位的寄存器，可能是用于存储某个基址寄存器的值。
+BMR_COMMAND、BMR_prdt、BMR_STATUS：这些可能是特定于该IDE设备的命令或状态寄存器。
+prdt：一个指向 prdt_t 结构体的指针，可能用于存储传输描述符的信息。
+prdt_phys、mem_buffer、mem_buffer_phys：这些是8位的指针，可能用于指向物理内存中的数据缓冲区或其他缓冲区。
+mountpoint：一个32字符的字符串，可能用于标记设备的挂载点。
+*/
 typedef struct prdt {
 	uint32_t buffer_phys;
 	uint16_t transfer_size;
 	uint16_t mark_end;
 }__attribute__((packed)) prdt_t;
+
+
 
 typedef struct ata_dev {
 	// A list of register address
