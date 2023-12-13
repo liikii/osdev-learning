@@ -318,6 +318,7 @@ void ata_device_detect(ata_dev_t * dev, int primary) {
 }
 
 void ata_init() {
+    // 取pci controller设备
     // First, find pci device
     ata_device = pci_get_device(ATA_VENDOR_ID, ATA_DEVICE_ID, -1);
 

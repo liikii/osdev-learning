@@ -8,6 +8,23 @@ extern page_directory_t * kpage_dir;
 
 
 /*
+IDE连接方式和工作模式简介
+硬盘通过IDE线连接到主板的IDE接口。CPU通过PCI中心，控制主板上的硬盘控制芯片（disk controller）和硬盘进行数据交互。
+1. 一个disk controller（我理解它是主板上的一个芯片或者芯片组）可以支持两条总线：我们把他们分别叫做Primary bus和Secondary bus。也就是下图中主板的两个接口（白色和绿色）可以连接出两条IDE线。
+
+ata 0x3F6  0x376
+
+https://zhuanlan.zhihu.com/p/653413684
+https://wiki.osdev.org/ATA_PIO_Mode
+https://github.com/levex/osdev
+
+https://www.zhihu.com/column/c_1673630801227857920
+https://blog.csdn.net/mxy990811/article/details/118556788
+https://vimsky.com/examples/detail/cpp-ex-----pci_write_config_byte-function.html
+
+*/
+
+/*
 prdt_t 结构体：
 
 buffer_phys：一个32位的物理地址，可能代表缓冲区的物理地址。
