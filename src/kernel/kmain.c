@@ -161,7 +161,9 @@ void completed_init() {
     keyboard_init();
 
     qemu_printf("Initializing vfs, ext2 and ata/dma...\n");
+
     vfs_init();
+    
     ata_init();
     ext2_init("/dev/hda", "/");
 
